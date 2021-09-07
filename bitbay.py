@@ -1,3 +1,4 @@
+from os import close
 import requests
 import json
 from datetime import datetime
@@ -6,6 +7,15 @@ from requests.api import request
 from requests.sessions import Session
 
 from pprint import pprint as pp
+import pendulum
+
+now = pendulum.now("Europe/Warsaw")
+
+time_start = pendulum.datetime(2014, 5, 12, tz="Europe/Warsaw")
+# print(time_start.to_iso8601_string())
+# print(now.int_timestamp)
+
+print(datetime.fromtimestamp(1630972800))
 
 marketCode = 'BTC-USD'
 
@@ -17,8 +27,10 @@ interval = {    '1min': 60,
             }
 
 
-time_from = 1002042800000
+time_from = time_start.int_timestamp * 1000
 time_to = 1632042800000
+
+file1 = open("table_per_day.txt","w")
 
 
 def date_to_sec(date):
@@ -52,12 +64,16 @@ class BitBay:
         querystring = {"from": date_from, "to": date_to}
         response = self.session.get(url, params=querystring)
         data_text = json.loads(response.text)
-
+        file1 = open("table_per_day.txt","w")
         for el in data_text['items']:
-            print(sec_to_date(el[0]))
+            print(10000000000 / 1000) 
             print(el[1])
+            file1.write(str(int(int(el[0]) / 1000)) + "\t" + str(round(float(el[1]['o']), 2)) + "\n")
+        file1.close()
+
+
 
 resp = BitBay()
-resp.getMarket('btc-usd')
-# resp.getMarketHistory('btc-usd', '1d', time_from, time_to)
+# resp.getMarket('btc-usd')
+resp.getMarketHistory('btc-usd', '1d', time_from, time_to)
 
