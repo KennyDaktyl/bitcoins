@@ -23,10 +23,7 @@ seconds_range = 3600
 today = datetime.now()
 
 def set_new_time_range(timestamp, seconds_range):
-    timestamp_end = int(timestamp) // 1000
-    timestamp_end = timestamp_end + seconds_range
-    timestamp_end = timestamp_end * 1000
-    return timestamp_end
+    return int(timestamp) + seconds_range * 1000
 
 # first bitcoin
 datetime_start = pendulum.datetime(2014, 5, 12, tz="Europe/Warsaw")
@@ -46,7 +43,7 @@ class BitBay:
 
     def getMarketHistory(self, market_code, interval_set, date_from, date_end, file_name):
         url = self.apiurl + f'/trading/candle/history/{market_code}/{interval_set}'
-        querystring = {"from": date_from, "to": date_end}
+        querystring = {"from": str(int(date_from) + 1), "to": date_end}
         response = self.session.get(url, params=querystring)
         data_text = json.loads(response.text)
         print(data_text)
@@ -58,25 +55,29 @@ class BitBay:
         else:
             return False
 
-def read_write_file(timestamp_from):
+def get_end_timestamp(timestamp_from, timestamp_end):
     with open(file_name) as f:
         if os.stat(file_name).st_size == 0:
             timestamp_end = timestamp_from
         else:
             lines = f.read().splitlines()
             last_line = lines[-1].split("\t")
-            timestamp_from = set_new_time_range(last_line[0], seconds_range)
+            timestamp_from = last_line[0]
             timestamp_end = set_new_time_range(timestamp_from, seconds_range)
         return (timestamp_from, timestamp_end)
 
 resp = BitBay()
-timestamp_from, timestamp_end = read_write_file(timestamp_from)
+timestamp_from, timestamp_end = get_end_timestamp(timestamp_from, timestamp_end)
 
 while timestamp_end < timestamp_finish:
     
-    print("Nowe dane: " + str(timestamp_from) + ", " + str(timestamp_end))
+    
     if resp.getMarketHistory(market_code, interval_set, timestamp_from, timestamp_end, file_name):
-        timestamp_from, timestamp_end = read_write_file(timestamp_from)
+        timestamp_from, timestamp_end = get_end_timestamp(timestamp_from, timestamp_end)
+        timestamp_from = timestamp_end
+        timestamp_end = set_new_time_range(timestamp_from, seconds_range)
+        print("Nowe dane: " + str(timestamp_from) + ", " + str(timestamp_end))
     else:
         timestamp_from = timestamp_end
         timestamp_end = set_new_time_range(timestamp_from, seconds_range)
+        print("Brak danych: " + str(timestamp_from) + ", " + str(timestamp_end))
