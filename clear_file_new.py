@@ -70,7 +70,7 @@ def read_write_file(timestamp_from):
         return (timestamp_from, timestamp_end)
 
 resp = BitBay()
-timestamp_end = read_write_file(timestamp_from)[0]
+timestamp_from, timestamp_end = read_write_file(timestamp_from)
 
 while timestamp_end < timestamp_finish:
     
