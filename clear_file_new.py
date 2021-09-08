@@ -53,7 +53,7 @@ class BitBay:
         if data_text.get('items'):
             with open(file_name, 'a') as f:
                 for el in data_text['items']:
-                    f.write(str(int(int(el[0]))) + "\t" + "%.2f" % float(el[1]['o']) + "\n")
+                    f.write(str(el[0]) + "\t" + "%.2f" % float(el[1]['o']) + "\n")
             return True
         else:
             return False
