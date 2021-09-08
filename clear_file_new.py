@@ -22,16 +22,16 @@ seconds_range = 3600
 
 today = datetime.now()
 
-def add_time_range(timestamp, seconds_range):
-    timestamp_end = int(timestamp) / 1000
+def set_new_time_range(timestamp, seconds_range):
+    timestamp_end = int(timestamp) // 1000
     timestamp_end = timestamp_end + seconds_range
     timestamp_end = timestamp_end * 1000
-    return int(timestamp_end)
+    return timestamp_end
 
 # first bitcoin
 datetime_start = pendulum.datetime(2014, 5, 12, tz="Europe/Warsaw")
 timestamp_from = int(datetime_start.int_timestamp) * 1000
-timestamp_end = add_time_range(timestamp_from, seconds_range)
+timestamp_end = set_new_time_range(timestamp_from, seconds_range)
 
 # finish while
 timestamp_finish = pendulum.datetime(today.year, today.month, today.day, tz="Europe/Warsaw")
@@ -65,9 +65,9 @@ def read_write_file(timestamp_from):
         else:
             lines = f.read().splitlines()
             last_line = lines[-1].split("\t")
-            timestamp_from = add_time_range(last_line[0], seconds_range)
-            timestamp_end = add_time_range(timestamp_from, seconds_range)
-        return [timestamp_from, timestamp_end]
+            timestamp_from = set_new_time_range(last_line[0], seconds_range)
+            timestamp_end = set_new_time_range(timestamp_from, seconds_range)
+        return (timestamp_from, timestamp_end)
 
 resp = BitBay()
 timestamp_end = read_write_file(timestamp_from)[0]
@@ -76,8 +76,7 @@ while timestamp_end < timestamp_finish:
     
     print("Nowe dane: " + str(timestamp_from) + ", " + str(timestamp_end))
     if resp.getMarketHistory(market_code, interval_set, timestamp_from, timestamp_end, file_name):
-        timestamp_from = read_write_file(timestamp_from)[0]
-        timestamp_end = read_write_file(timestamp_from)[1]
+        timestamp_from, timestamp_end = read_write_file(timestamp_from)
     else:
         timestamp_from = timestamp_end
-        timestamp_end = add_time_range(timestamp_from, seconds_range)
+        timestamp_end = set_new_time_range(timestamp_from, seconds_range)
