@@ -75,5 +75,5 @@ class BitBay:
 
 resp = BitBay()
 # resp.getMarket('btc-usd')
-resp.getMarketHistory('btc-usd', '1d', time_from, time_to)
+resp.getMarketHistory('btc-usd', '1min', time_from, time_to)
 
