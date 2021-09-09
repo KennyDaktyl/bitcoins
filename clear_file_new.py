@@ -9,7 +9,7 @@ import pendulum
 from pprint import pprint as pp
 
 
-file_name = 'table_per_day_new.txt'
+file_name = 'table_per_day.txt'
 market_code = 'BTC-USD'
 interval = {    '1min': 60,
                 '15min': 900,
@@ -34,6 +34,20 @@ timestamp_end = set_new_time_range(timestamp_from, seconds_range)
 timestamp_finish = pendulum.datetime(today.year, today.month, today.day, tz="Europe/Warsaw")
 timestamp_finish = int(timestamp_finish.int_timestamp) * 1000
 
+def last_line_timestamp(file):
+    lines = file.read().splitlines()
+    last_line = lines[-1].split("\t")
+    return last_line[0]
+
+def get_end_timestamp(timestamp_from, timestamp_end):
+    with open(file_name) as f:
+        if os.stat(file_name).st_size == 0:
+            timestamp_end = timestamp_from
+        else:
+            timestamp_from = last_line_timestamp(f)
+            timestamp_end = set_new_time_range(timestamp_from, seconds_range)
+        return (timestamp_from, timestamp_end)
+
 class BitBay:
     def __init__(self):
         self.apiurl = "https://api.bitbay.net/rest"
@@ -48,23 +62,15 @@ class BitBay:
         data_text = json.loads(response.text)
         print(data_text)
         if data_text.get('items'):
-            with open(file_name, 'a') as f:
-                for el in data_text['items']:
-                    f.write(str(el[0]) + "\t" + "%.2f" % float(el[1]['o']) + "\n")
+            for el in data_text['items']:
+                with open(file_name) as file:
+                    last_price_date = last_line_timestamp(file)
+                with open(file_name, 'a') as f:
+                    if last_price_date != el[0]:
+                        f.write(str(el[0]) + "\t" + "%.2f" % float(el[1]['o']) + "\n")
             return True
         else:
             return False
-
-def get_end_timestamp(timestamp_from, timestamp_end):
-    with open(file_name) as f:
-        if os.stat(file_name).st_size == 0:
-            timestamp_end = timestamp_from
-        else:
-            lines = f.read().splitlines()
-            last_line = lines[-1].split("\t")
-            timestamp_from = last_line[0]
-            timestamp_end = set_new_time_range(timestamp_from, seconds_range)
-        return (timestamp_from, timestamp_end)
 
 resp = BitBay()
 timestamp_from, timestamp_end = get_end_timestamp(timestamp_from, timestamp_end)
